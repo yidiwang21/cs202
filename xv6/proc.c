@@ -6,7 +6,6 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
-#include "rand.h"
 
 struct {
   struct spinlock lock;
@@ -90,6 +89,10 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
 
+  // cs202: init the number of tickets of the new process
+  p->tickets = 10;
+  p->stride = 1;
+
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -112,9 +115,6 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-
-  // init the number of tickets of the new process
-  p->tickets = 10;
 
   return p;
 }
@@ -342,18 +342,30 @@ scheduler(void)
         continue;
       sum_tickets += p->tickets;
     }
-    // step 2: generate a random number, the input is the total number of tickets
-    unsigned long chosen_number = fastrand(sum_tickets);
 
-    // step 3: find the runable process holding most tickets
-    int passed = 0;
+    // step 2: calculate the allocated ratio per process
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if(p->state != RUNNABLE)
+        continue;
+      p->stride = sum_tickets / p->tickets;
+    }
+
+    // step 3: find the runable process with minimum stride
+    int chosen_stride = MAX_STRIDE;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if(p->state != RUNNABLE)
+        continue;
+      if (chosen_stride > p->stride) {
+        chosen_stride = p->stride;
+      }
+    }
+
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-      passed += p->tickets;
-      if (passed < chosen_number)
+      if(p->stride != chosen_stride)
         continue;
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -574,7 +586,29 @@ procdump(void)
   }
 }
 
-// cs202
+// cs202 part1
+int info(int param) {
+  struct proc *p;
+
+  if (param == 1) {
+    int cnt = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {   
+      cnt++;
+    }
+    return cnt;
+  }else if (param == 2) {
+    return count;
+  }else if (param == 3) {
+    int cnt = 0;
+    cnt = PGROUNDUP(myproc()->sz) / PGSIZE;
+    return cnt;
+  }
+  return -1;
+}
+
+
+
+// cs202 part2
 // a system call that assign tickets number for a process
 void assigntickets(int num) {
   acquire(&ptable.lock);
