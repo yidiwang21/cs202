@@ -13,5 +13,5 @@
 #define FSSIZE       1000  // size of file system in blocks
 
 // cs202: stride scheduling
-#define MAX_STRIDE  1000
+#define MAX_STRIDE  100000000
 #define MIN_STRIDE  1

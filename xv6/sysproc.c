@@ -113,6 +113,11 @@ int sys_assigntickets(void) {
   return 0;
 }
 
+int sys_getstride(void) {
+  cli();
+  return getstride();
+}
+
 int sys_info(void) {
   int param;
   argint(0, &param);

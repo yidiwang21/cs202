@@ -91,7 +91,8 @@ found:
 
   // cs202: init the number of tickets of the new process
   p->tickets = 10;
-  p->stride = 1;
+  p->stride = MAX_STRIDE;
+  p->pass = 0;
 
   release(&ptable.lock);
 
@@ -349,14 +350,16 @@ scheduler(void)
         continue;
       p->stride = sum_tickets / p->tickets;
     }
-
+    
     // step 3: find the runable process with minimum stride
-    int chosen_stride = MAX_STRIDE;
+    int chosen_pass = MAX_STRIDE;
+    int chosen_pid = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
       if(p->state != RUNNABLE)
         continue;
-      if (chosen_stride > p->stride) {
-        chosen_stride = p->stride;
+      if (chosen_pass > p->pass) {
+        chosen_pass = p->pass;
+        chosen_pid = p->pid;
       }
     }
 
@@ -365,11 +368,15 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-      if(p->stride != chosen_stride)
+      if(p->pid != chosen_pid)
         continue;
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+
+      // cs202
+      p->pass += p->stride;
+      
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
@@ -592,7 +599,7 @@ int info(int param) {
 
   if (param == 1) {
     int cnt = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {   
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) { 
       cnt++;
     }
     return cnt;
@@ -614,4 +621,8 @@ void assigntickets(int num) {
   acquire(&ptable.lock);
   myproc()->tickets = num;
   release(&ptable.lock);
+}
+
+int getstride(void) {
+  return myproc()->stride;
 }

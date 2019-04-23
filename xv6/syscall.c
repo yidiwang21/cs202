@@ -104,6 +104,7 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_assigntickets(void);
+extern int sys_getstride(void);
 extern int sys_info(void);
 
 static int (*syscalls[])(void) = {
@@ -129,6 +130,7 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_assigntickets] sys_assigntickets,
+[SYS_getstride] sys_getstride,
 [SYS_info]    sys_info,
 };
 

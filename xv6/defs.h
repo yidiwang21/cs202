@@ -121,6 +121,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 void            assigntickets(int);
+int             getstride(void);
 int             info(int);
 
 // swtch.S

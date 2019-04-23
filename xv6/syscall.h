@@ -22,3 +22,4 @@
 #define SYS_close  21
 #define SYS_assigntickets   22
 #define SYS_info   23
+#define SYS_getstride   24
