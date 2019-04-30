@@ -9,6 +9,12 @@ I added a system definition in proc.c, and accordingly, I changed the other file
 * The second option is to print the number of system call the current process has done so far. I declared a global counter in defs.h which also accomodate the declaration of system calls. I increment the counter in each function inside sysproc.c.
 * In xv6, the virtual memory stack grows from bottom to top. There is a field "sz" kept in pcb, which is the size of stack. So I round it up, and divide by the page size, the result should be the number of pages the current process uses.
 
+### Notes on Test File
+After compiling, the test file can be simply run by:
+```
+$ part1 [1, 2, or 3]
+```
+
 ### Modifications
 proc.c:
 ```
@@ -37,7 +43,6 @@ user.h:
 // system calls
 ...
 int assigntickets(int);     // cs202 part2
-int getstride(void);        // cs202 part2
 int info(int);              // cs202 part1
 ```
 
@@ -47,7 +52,6 @@ defs.h:
 // proc.c
 ...
 void            assigntickets(int); // cs202 part2
-int             getstride(void);    // cs202 part2
 int             info(int);          // cs202 part1
 ```
 ```
@@ -60,19 +64,16 @@ syscall.h:
 ```
 #define SYS_assigntickets   22
 #define SYS_info   23
-#define SYS_getstride   24
 ```
 
 syscall.c:
 ```
 extern int sys_assigntickets(void); // cs202 part2
-extern int sys_getstride(void);     // cs202 part2
 extern int sys_info(void);          // cs202 part1
 
 static int (*syscalls[])(void) = {
 ...
 [SYS_assigntickets] sys_assigntickets,  // cs202 part2
-[SYS_getstride] sys_getstride,          // cs202 part2
 [SYS_info]    sys_info,                 // cs202 part2
 };
 ```
@@ -80,7 +81,6 @@ static int (*syscalls[])(void) = {
 usys.S:
 ```
 SYSCALL(assigntickets)
-SYSCALL(getstride)
 SYSCALL(info)
 ```
 
@@ -97,40 +97,28 @@ int sys_info(void) {
 ```
 
 ### Test Results
-
+![alt text](https://github.com/yidiwang21/cs202/blob/master/lab1/figs/part1_demo.png?raw=true)
 
 
 ## Part 2
 ### Main Idea
 The first thing I changed is in Makefile, in which I changed the number of cpu from 2 to 1. </br>
 I added three field in pcb located in proc.h. ```tickets``` keeps the number of tickets that a process is assigned. ```stride``` is first set to be a large number. When scheduler is triggered, ```stride``` equals to total number of tickets divided by the process's tickets. ```pass``` keeps the next time when the process is allowed to run. Each time when a process is scheduled, ```pass``` should be incremented by ```stride```.  </br>
-The fields are initialized in system function ```allocproc()```. </br>
-An system call ```assigntickets``` is written for user space program to call to give some tickets to the current process. </br>
-The main changes are in ```scheduler()```:
-* I first traverse the pcb table, to sum up the number of tickets that all the runnable processes are holding.
-* Then I calculated the allocated ratio of each runnable process, which is proportional to the ```stride```. It is obtained by ```p->stride = sum_tickets / p->tickets;```.
-* Next step, I traversed the pcb table again to find the process of a minimum ```pass``` value, which means that the process is eligible to run earliest.
-My experiments showed that if I calculated the total number of tickets in scheduler. It would vary each time. So I have to add a field in cpu table to keep the total number of tickets on each cpu.
+I defined some macros related to tickets in ```param.h```. The fields are initialized in system function ```allocproc()```. </br>
+An system call ```assigntickets``` is written for user space program to call to give some tickets to the current process. The number of tickets for the process as well as the ```stride``` is updated n the system call. Because the scheduling ratio of each process should be proportional to the inverse of its stride, I don't need to calculated the total number of tickets all the processes at "ready" or "running" state are holding.
+In ```scheduler()```, I traversed the pcb table again to find the process of a minimum ```pass``` value, which means that the process is eligible to run earliest.
 
-
+### Notes on Test File
+After compiling, the test file can be simply run by:
+```
+$ part2
+```
+In this test file, I used "fork()" system call twice to launch three processes in total. I did this to track their pids. After the process with the maximum tickets finishes, the process will kill the other two processes. In this way, the final prints are the relative ticks each process has been scheduled. </br>
+Additionally, to guarantee the functionality of the program, if this file need to be changed, the "prog1" must be assigned most tickets, because I keep track of their process ids in this process.
 
 ### Modifications
 (The other changes has been illustrated in the code in part 1)
 proc.h
-```
-// Per-CPU state
-struct cpu {
-  uchar apicid;                // Local APIC ID
-  struct context *scheduler;   // swtch() here to enter scheduler
-  struct taskstate ts;         // Used by x86 to find stack for interrupt
-  struct segdesc gdt[NSEGS];   // x86 global descriptor table
-  volatile uint started;       // Has the CPU started?
-  int ncli;                    // Depth of pushcli nesting.
-  int intena;                  // Were interrupts enabled before pushcli?
-  struct proc *proc;           // The process running on this cpu or null
-  int total_tickets;            // cs202
-};
-```
 ```
 // Per-process state
 struct proc {
@@ -148,37 +136,22 @@ static struct proc* allocproc(void) {
   found:
     // cs202: init the number of tickets of the new process
     p->tickets = 10;
-    p->stride = MAX_STRIDE;
     p->pass = 0;
     ...
 }
 ```
 ```
-void scheduler(void) {
+scheduler(void)
+{
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+  
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
-    // cs202
-    // step 1: calculate total tickets number of processes in runable state
-    int sum_tickets = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if(p->state != RUNNABLE)
-        continue;
-      sum_tickets += p->tickets;
-    }
-
-    // step 2: calculate the allocated ratio per process
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if(p->state != RUNNABLE)
-        continue;
-      p->stride = sum_tickets / p->tickets;
-    }
-    
-    // step 3: find the runable process with minimum pass
+    // cs202: find the runable process with minimum pass
     int chosen_pass = MAX_STRIDE;
     int chosen_pid = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
@@ -204,6 +177,7 @@ void scheduler(void) {
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+
       swtch(&(c->scheduler), p->context);
       switchkvm();
       c->proc = 0;
@@ -213,7 +187,6 @@ void scheduler(void) {
 }
 ```
 ```
-
 // cs202 part2
 // a system call that assign tickets number for a process
 void assigntickets(int num) {
@@ -234,3 +207,18 @@ int sys_assigntickets(void) {
   return 0;
 }
 ```
+
+### Test Results
+#### Case 1: [30, 20, 10]
+![alt text](https://github.com/yidiwang21/cs202/blob/master/lab1/figs/part2_demo_case2.png?raw=true)
+
+Expected scheduling ratio 3:2:1
+From the above output screenshot, we can see that the relative ticks of processes are [160, 107, 53], which can be approximated to 3:2:1.
+
+#### Case 2: [250, 100, 50]
+![alt text](https://github.com/yidiwang21/cs202/blob/master/lab1/figs/part2_demo_case1.png?raw=true)
+
+Expected scheduling ratio 5:2:1
+From the above output screenshot, we can see that the relative ticks of processes are [160, 66, 33], which can be approximated to 5:2:1.
+
+### Scheduler Performance Analysis

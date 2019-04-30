@@ -104,7 +104,6 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_assigntickets(void); // cs202 part2
-extern int sys_setsumtickets(void);     // cs202 part2
 extern int sys_info(void);          // cs202 part1
 
 static int (*syscalls[])(void) = {
@@ -130,7 +129,6 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_assigntickets] sys_assigntickets,  // cs202 part2
-[SYS_setsumtickets] sys_setsumtickets,          // cs202 part2
 [SYS_info]    sys_info,                 // cs202 part2
 };
 

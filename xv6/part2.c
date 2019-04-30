@@ -21,12 +21,10 @@ int main(int argc, char *argv[]) {
     int cnt2 = 0;
     int cnt3 = 0;
 
-    setsumtickets(400);
-
     int pid1 = fork();
 
     if (pid1 == 0) {
-        assigntickets(50);
+        assigntickets(10);
         ticks("prog3", cnt3);
         exit();
             
@@ -34,19 +32,17 @@ int main(int argc, char *argv[]) {
 
         int pid2 = fork();
         if (pid2 == 0) {
-            assigntickets(100);
+            assigntickets(20);
             ticks("prog2", cnt2);    
         
         }else if(pid2 > 0) {
-            assigntickets(250);
-            
+            assigntickets(30);
             ticks("prog1", cnt1);
-
-            
 
             kill(pid2);
             kill(pid1);
             printf(1, "============ prog1 is finished ============\n");
+            printf(1, "# prog2 and prog3 are killed!\n");
             
             exit();
         

@@ -112,14 +112,14 @@ int sys_assigntickets(void) {
   return 0;
 }
 
-int sys_setsumtickets(void) {
-  count++;
-  cli();
-  int param;
-  argint(0, &param);
-  setsumtickets(param);
-  return 0;
-}
+// int sys_setsumtickets(void) {
+//   count++;
+//   cli();
+//   int param;
+//   argint(0, &param);
+//   setsumtickets(param);
+//   return 0;
+// }
 
 int sys_info(void) {
   count++;

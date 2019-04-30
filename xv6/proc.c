@@ -91,8 +91,6 @@ found:
 
   // cs202: init the number of tickets of the new process
   p->tickets = 10;
-  p->stride = MAX_STRIDE;
-  p->pass = 0;
 
   release(&ptable.lock);
 
@@ -330,32 +328,12 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  c->sum_tickets = 400;
   
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // cs202
-    // step 1: calculate total tickets number of processes in runable state
-    int sum_tickets = c->sum_tickets;
-    // for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    //   if(p->state != RUNNABLE)
-    //     continue;
-    //   sum_tickets += p->tickets;
-    // }
-
-    // sum_tickets = 400;
-
-    // step 2: calculate the allocated ratio per process
-    // TODO: stride should not be updated each time in the scheduler
-    // it should only be updated once in allocproc
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if(p->state != RUNNABLE)
-        continue;
-      p->stride = sum_tickets / p->tickets;
-    }
-    
     // step 3: find the runable process with minimum pass
     int chosen_pass = MAX_STRIDE;
     int chosen_pid = 0;
@@ -394,29 +372,6 @@ scheduler(void)
       c->proc = 0;
     }
     release(&ptable.lock);
-
-    /* // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-    }
-    release(&ptable.lock); */
-
   }
 }
 
@@ -615,21 +570,18 @@ int info(int param) {
     cnt = PGROUNDUP(myproc()->sz) / PGSIZE;
     return cnt;
   }
+  cprintf("# Query error!");
   return -1;
 }
-
-
 
 // cs202 part2
 // a system call that assign tickets number for a process
 void assigntickets(int num) {
+  struct proc *p = myproc();
+  
   acquire(&ptable.lock);
-  myproc()->tickets = num;
+  p->tickets = num;
+  p->stride = MAX_N_TICKETS / p->tickets;
+  p->pass = 0;
   release(&ptable.lock);
-}
-
-int setsumtickets(int num) {
-  mycpu()->sum_tickets = num;
-  return 0;
-  // return myproc()->stride;
 }

@@ -15,3 +15,4 @@
 // cs202: stride scheduling
 #define MAX_STRIDE  100000000
 #define MIN_STRIDE  1
+#define MAX_N_TICKETS   1000
