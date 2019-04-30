@@ -120,9 +120,9 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-void            assigntickets(int);
-int             getstride(void);
-int             info(int);
+void            assigntickets(int); // cs202 part2
+int             setsumtickets(int);    // cs202 part2
+int             info(int);          // cs202 part1
 
 // swtch.S
 void            swtch(struct context**, struct context*);

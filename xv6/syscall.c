@@ -103,9 +103,9 @@ extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
-extern int sys_assigntickets(void);
-extern int sys_getstride(void);
-extern int sys_info(void);
+extern int sys_assigntickets(void); // cs202 part2
+extern int sys_setsumtickets(void);     // cs202 part2
+extern int sys_info(void);          // cs202 part1
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -129,9 +129,9 @@ static int (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-[SYS_assigntickets] sys_assigntickets,
-[SYS_getstride] sys_getstride,
-[SYS_info]    sys_info,
+[SYS_assigntickets] sys_assigntickets,  // cs202 part2
+[SYS_setsumtickets] sys_setsumtickets,          // cs202 part2
+[SYS_info]    sys_info,                 // cs202 part2
 };
 
 void

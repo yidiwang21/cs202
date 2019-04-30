@@ -105,20 +105,24 @@ sys_uptime(void)
 
 // cs202
 int sys_assigntickets(void) {
-  // count++;
-  
+  count++;
   int num;
   argint(0, &num);
   assigntickets(num);
   return 0;
 }
 
-int sys_getstride(void) {
+int sys_setsumtickets(void) {
+  count++;
   cli();
-  return getstride();
+  int param;
+  argint(0, &param);
+  setsumtickets(param);
+  return 0;
 }
 
 int sys_info(void) {
+  count++;
   int param;
   argint(0, &param);
   return info(param);

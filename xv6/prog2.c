@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     const int loop=36000;
     for(i=0;i<loop;i++) {
         asm("nop");       //in order to prevent the compiler from optimizing the for loop
-        if(i % 3000 == 0) {
+        if(i % 300 == 0) {
             printf(1, "2 ");
         } 
         for(k=0;k<loop;k++) {

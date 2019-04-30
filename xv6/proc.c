@@ -330,6 +330,7 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+  c->sum_tickets = 400;
   
   for(;;){
     // Enable interrupts on this processor.
@@ -337,21 +338,25 @@ scheduler(void)
 
     // cs202
     // step 1: calculate total tickets number of processes in runable state
-    int sum_tickets = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if(p->state != RUNNABLE)
-        continue;
-      sum_tickets += p->tickets;
-    }
+    int sum_tickets = c->sum_tickets;
+    // for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    //   if(p->state != RUNNABLE)
+    //     continue;
+    //   sum_tickets += p->tickets;
+    // }
+
+    // sum_tickets = 400;
 
     // step 2: calculate the allocated ratio per process
+    // TODO: stride should not be updated each time in the scheduler
+    // it should only be updated once in allocproc
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
       if(p->state != RUNNABLE)
         continue;
       p->stride = sum_tickets / p->tickets;
     }
     
-    // step 3: find the runable process with minimum stride
+    // step 3: find the runable process with minimum pass
     int chosen_pass = MAX_STRIDE;
     int chosen_pid = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
@@ -623,6 +628,8 @@ void assigntickets(int num) {
   release(&ptable.lock);
 }
 
-int getstride(void) {
-  return myproc()->stride;
+int setsumtickets(int num) {
+  mycpu()->sum_tickets = num;
+  return 0;
+  // return myproc()->stride;
 }

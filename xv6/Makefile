@@ -185,6 +185,7 @@ UPROGS=\
 	_prog1\
 	_prog2\
 	_prog3\
+	_part2\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
