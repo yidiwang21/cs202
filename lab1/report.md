@@ -212,13 +212,15 @@ int sys_assigntickets(void) {
 #### Case 1: [30, 20, 10]
 ![alt text](https://github.com/yidiwang21/cs202/blob/master/lab1/figs/part2_demo_case2.png?raw=true)
 
-Expected scheduling ratio 3:2:1
+Expected scheduling ratio 3:2:1 </br>
 From the above output screenshot, we can see that the relative ticks of processes are [160, 107, 53], which can be approximated to 3:2:1.
 
 #### Case 2: [250, 100, 50]
 ![alt text](https://github.com/yidiwang21/cs202/blob/master/lab1/figs/part2_demo_case1.png?raw=true)
 
-Expected scheduling ratio 5:2:1
+Expected scheduling ratio 5:2:1 </br>
 From the above output screenshot, we can see that the relative ticks of processes are [160, 66, 33], which can be approximated to 5:2:1.
 
 ### Scheduler Performance Analysis
+#### Case 1
+TODO: print the progs, draw timeline here
