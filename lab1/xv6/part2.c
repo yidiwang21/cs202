@@ -7,7 +7,7 @@ void ticks(char* prog_name, int cnt) {
     const int loop = 48000;
     for(i = 0; i < loop; i++) {
         asm("nop");  
-        if(i % 3000 == 0) {
+        if(i % 300 == 0) {
             cnt++;
             printf(1, "# %s ticks: %d\n", prog_name, cnt);
         }     
