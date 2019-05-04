@@ -7,10 +7,9 @@ void ticks(char* prog_name, int cnt) {
     const int loop = 48000;
     for(i = 0; i < loop; i++) {
         asm("nop");  
-        if(i % 300 == 0) {
+        if(i % 3000 == 0) {
             cnt++;
             printf(1, "# %s ticks: %d\n", prog_name, cnt);
-            // printf(1, "============ Sum = %d ============\n", getstride());
         }     
         for(k = 0; k < loop; k++) asm("nop");
     }
@@ -27,9 +26,7 @@ int main(int argc, char *argv[]) {
         assigntickets(10);
         ticks("prog3", cnt3);
         exit();
-            
     }else if (pid1 > 0) {    // child 1 process
-
         int pid2 = fork();
         if (pid2 == 0) {
             assigntickets(20);
@@ -45,8 +42,6 @@ int main(int argc, char *argv[]) {
             printf(1, "# prog2 and prog3 are killed!\n");
             
             exit();
-        
-        
         }else {
             printf(1, "# fork(2) error.\n");
             exit();
@@ -55,6 +50,4 @@ int main(int argc, char *argv[]) {
         printf(1, "# fork(1) error.\n");
         exit();
     }
-
-
 }

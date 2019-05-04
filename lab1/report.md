@@ -12,7 +12,7 @@ I added a system definition in proc.c, and accordingly, I changed the other file
 ### Notes on Test File
 After compiling, the test file can be simply run by:
 ```
-$ part1 [1, 2, or 3]
+$ part1 [option: 1, 2, or 3]
 ```
 
 ### Modifications
@@ -222,5 +222,40 @@ Expected scheduling ratio 5:2:1 </br>
 From the above output screenshot, we can see that the relative ticks of processes are [160, 66, 33], which can be approximated to 5:2:1.
 
 ### Scheduler Performance Analysis
-#### Case 1
-TODO: print the progs, draw timeline here
+A python script is used to visualize the timeline of different cases. In this part, I did not kill the other two process when the first process finished. The script can be simply run by typing ```python3 draw_timeline```. </br>
+The scheduling ticks of each process were printed every 3000 loops. In the section test result, the ticks were printed every 300 loops.
+```
+void ticks(char* prog_name, int cnt) {
+    int i, k;
+    const int loop = 48000;
+    for(i = 0; i < loop; i++) {
+        asm("nop");  
+        if(i % 3000 == 0) {
+            cnt++;
+            printf(1, "# %s ticks: %d\n", prog_name, cnt);
+        }     
+        for(k = 0; k < loop; k++) asm("nop");
+    }
+}
+```
+
+![alt text](https://github.com/yidiwang21/cs202/blob/master/lab1/figs/timeline.png?raw=true)
+
+Table 1: Average Response Time of the Scheduler
+
+|        | Average Response Time | Average Waiting Time |
+|--------|-----------------------|----------------------|
+| Naive  | (47+48+48)/3=47       | 1                    |
+| Case 1 | (30+39+48)/3=39       | 1                    |
+| Case 2 | (26+40+48)/3=38       | 1                    |
+
+Table 2: Turnaround Time of Each Process
+
+|        | prog1 | prog2 | prog3 | Average Turnaround Time |
+|--------|-------|-------|-------|-------------------------|
+| Naive  | 47    | 44    | 47    | 46                      |
+| Case 1 | 30    | 37    | 47    | 38                      |
+| Case 2 | 26    | 38    | 47    | 37                      |
+
+From the above figure of process timeline and scheduling criteria, it showed that with tickets assignment, the stride scheduler could achieve a better average response time and a better turnaround time compared to the naive round-robin scheduling policy. </br>
+However, the naive RR scheduling policy could ensure fairness among all the runnable process. Because tickets (priority) were assigned to the processes in stride scheduling policy, the fairness was worse.
