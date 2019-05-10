@@ -560,10 +560,11 @@ int info(int param) {
   if (param == 1) {
     int cnt = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) { 
-      cnt++;
+      if (p->state != UNUSED)
+        cnt++;
     }
     return cnt;
-  }else if (param == 2) {
+  }else if (param == 2) { // this can also be implemented by incrementing the counter in syscall.c, when syscall table needs to be accessed
     return count;
   }else if (param == 3) {
     int cnt = 0;
