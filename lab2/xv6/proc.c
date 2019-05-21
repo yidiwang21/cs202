@@ -535,7 +535,7 @@ procdump(void)
 
 // cs202 lab2
 // create a process using the parent's address space
-int clone(void*(*func)(void*), void *stack, int size, void *arg) {
+int clone(void*(func)(void*), void *stack, int size, void *arg) {
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
