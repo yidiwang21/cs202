@@ -3,6 +3,11 @@
 #include "fcntl.h"
 #include "user.h"
 #include "x86.h"
+#include "param.h"
+#include "syscall.h"
+#include "traps.h"
+#include "fs.h"
+#define PGSIZE 4096
 
 char*
 strcpy(char *s, const char *t)
@@ -103,4 +108,36 @@ memmove(void *vdst, const void *vsrc, int n)
   while(n-- > 0)
     *dst++ = *src++;
   return vdst;
+}
+
+// thread library
+void lock_init(lock_t *lock) {
+  lock->locked = 0;
+}
+
+void lock_acquire(lock_t *lock) {
+  while(xchg(&(lock->locked), 1) != 0);
+}
+
+void lock_release(lock_t *lock) {
+  xchg(&(lock->locked), 0);
+}
+
+void *thread_create(void*(start_routine)(void*), void *arg) {
+  lock_t lk;
+  lock_init(&lk);
+  lock_acquire(&lk);
+  
+  void *stack = malloc(2 * PGSIZE);
+  
+  lock_release(&lk);
+
+  int tid = clone(start_routine, stack, 0, arg);
+
+  if (tid < 0) {
+      printf(1, "# Clone failed\n");
+      return 0;
+  }
+
+  return 0;
 }
