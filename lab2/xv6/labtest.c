@@ -11,11 +11,8 @@ void func(void* arg) {
     if (pass_no <= pass_round) {
         pass_no++;
         printf(1, "# Pass number no: %d ", pass_no);
-        lock_release(&lock);
-    }else{
-        lock_release(&lock);
-        exit();
     }
+    lock_release(&lock);
 }
 
 void tid_increment(int n) {

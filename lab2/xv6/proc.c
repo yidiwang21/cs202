@@ -544,9 +544,9 @@ int clone(void*(func)(void*), void *stack, int size, void *arg) {
   if((np = allocproc()) == 0){
     return -1;
   }
-  // FIXME:
-  // if ((uint)stack % PGSIZE != 0 || stack == 0)
-  //   return -1;
+
+  if ((uint)stack % PGSIZE != 0 || stack == 0)
+    return -1;
 
   // step 1: share the same address space with parent
   np->sz = curproc->sz;
@@ -577,8 +577,10 @@ int clone(void*(func)(void*), void *stack, int size, void *arg) {
   if (copyout(np->pgdir, sp, ustack, 8) < 0)
     return -1;
 
-  curproc->tf->esp = sp;
-  curproc->tf->ebp = curproc->tf->esp;
-  curproc->tf->eip = (uint)func;
+  // clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+  np->tf->esp = sp;
+  np->tf->ebp = curproc->tf->esp;
+  np->tf->eip = (uint)func;
   return pid;
 }

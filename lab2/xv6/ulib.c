@@ -132,6 +132,9 @@ void *thread_create(void*(start_routine)(void*), void *arg) {
   
   lock_release(&lk);
 
+  if((uint)stack % PGSIZE)
+		stack = stack + (PGSIZE - (uint)stack % PGSIZE);
+
   int tid = clone(start_routine, stack, 0, arg);
 
   if (tid < 0) {
