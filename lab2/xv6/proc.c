@@ -549,38 +549,51 @@ int clone(void*(func)(void*), void *stack, int size, void *arg) {
     return -1;
 
   // step 1: share the same address space with parent
+  np->state = UNUSED;
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
   np->pgdir = curproc->pgdir;
-  pid = np->pid;
+
+  np->tf->eip = (uint)func; // change eip to new function
+  np->tf->eax = 0;          // clear %eax so that fork returns 0 in the child.
 
   // step 2: use the same file descriptor
   for (i = 0; i < NOFILE; i++)
     if (curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   acquire(&ptable.lock);
+
+  // test
+  np->tf->esp = (uint)(stack+PGSIZE-4); //put esp to right spot on stack
+  *((uint*)(np->tf->esp)) = (uint)arg; //arg to function
+  *((uint*)(np->tf->esp)-4) = 0xFFFFFFFF; //return to nowhere
+  np->tf->esp =(np->tf->esp) -4;
+
   np->state = RUNNABLE;
-  release(&ptable.lock);
 
   // step 3: switch user stack
-  uint ustack[2];
-  uint sp;
-  ustack[0] = 0xffffffff;  // fake return PC
-  ustack[1] = (uint)arg;
+  // uint ustack[2];
+  // uint sp;
+  // ustack[0] = 0xffffffff;  // fake return PC
+  // ustack[1] = (uint)arg;
   
-  sp = (uint)stack + PGSIZE;
-  sp -= 2*4;
-  if (copyout(np->pgdir, sp, ustack, 8) < 0)
-    return -1;
+  // sp = (uint)stack + PGSIZE;
+  // sp -= 2*4;
+  // if (copyout(np->pgdir, sp, ustack, 8) < 0) {
+  //   cprintf("Stack copy failed.\n");
+  //   return -1;
+  // }
 
-  // clear %eax so that fork returns 0 in the child.
-  np->tf->eax = 0;
-  np->tf->esp = sp;
-  np->tf->ebp = curproc->tf->esp;
-  np->tf->eip = (uint)func;
+  // np->tf->esp = sp;
+  // np->tf->ebp = curproc->tf->esp;
+
+  pid = np->pid;
+  release(&ptable.lock);
+
   return pid;
 }

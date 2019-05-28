@@ -124,13 +124,8 @@ void lock_release(lock_t *lock) {
 }
 
 void *thread_create(void*(start_routine)(void*), void *arg) {
-  lock_t lk;
-  lock_init(&lk);
-  lock_acquire(&lk);
   
   void *stack = malloc(2 * PGSIZE);
-  
-  lock_release(&lk);
 
   if((uint)stack % PGSIZE)
 		stack = stack + (PGSIZE - (uint)stack % PGSIZE);
@@ -141,6 +136,10 @@ void *thread_create(void*(start_routine)(void*), void *arg) {
       printf(1, "# Clone failed\n");
       return 0;
   }
+  // else if (tid == 0) {
+  //   (*start_routine)(arg);
+  //   exit();
+  // }
 
   return 0;
 }
