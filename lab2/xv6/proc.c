@@ -538,7 +538,7 @@ procdump(void)
 int clone(void*(func)(void*), void *stack, int size, void *arg) {
   int i, pid;
   struct proc *np;
-  struct proc *curproc = myproc();
+  struct proc *currproc = myproc();
 
   // Allocate process.
   if((np = allocproc()) == 0){
@@ -550,29 +550,36 @@ int clone(void*(func)(void*), void *stack, int size, void *arg) {
 
   // step 1: share the same address space with parent
   np->state = UNUSED;
-  np->sz = curproc->sz;
-  np->parent = curproc;
-  *np->tf = *curproc->tf;
-  np->pgdir = curproc->pgdir;
+  np->sz = currproc->sz;
+  np->parent = currproc;
+  *np->tf = *currproc->tf;
+  np->pgdir = currproc->pgdir;
 
   np->tf->eip = (uint)func; // change eip to new function
   np->tf->eax = 0;          // clear %eax so that fork returns 0 in the child.
 
   // step 2: use the same file descriptor
   for (i = 0; i < NOFILE; i++)
-    if (curproc->ofile[i])
-      np->ofile[i] = filedup(curproc->ofile[i]);
-  np->cwd = idup(curproc->cwd);
+    if (currproc->ofile[i])
+      np->ofile[i] = filedup(currproc->ofile[i]);
+  np->cwd = idup(currproc->cwd);
 
-  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+  safestrcpy(np->name, currproc->name, sizeof(currproc->name));
 
   acquire(&ptable.lock);
+  uint ustack[2];
+  ustack[0] = 0xffffffff;  // fake return PC
+  ustack[1] = (uint)arg;
 
   // test
-  np->tf->esp = (uint)(stack+PGSIZE-4); //put esp to right spot on stack
+  np->tf->esp = (uint)(stack+PGSIZE - 4); //put esp to right spot on stack
   *((uint*)(np->tf->esp)) = (uint)arg; //arg to function
-  *((uint*)(np->tf->esp)-4) = 0xFFFFFFFF; //return to nowhere
-  np->tf->esp =(np->tf->esp) -4;
+  *((uint*)(np->tf->esp) - 4) = 0xFFFFFFFF; //return to nowhere
+  np->tf->esp =(np->tf->esp) - 4;
+  if (copyout(np->pgdir, np->tf->esp, ustack, 8) < 0) {
+    cprintf("Stack copy failed.\n");
+    return -1;
+  }
 
   np->state = RUNNABLE;
 
