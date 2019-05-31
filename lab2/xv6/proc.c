@@ -576,7 +576,7 @@ int clone(void*(func)(void*), void *stack, int size, void *arg) {
   *((uint*)(np->tf->esp)) = (uint)arg; //arg to function
   *((uint*)(np->tf->esp) - 4) = 0xFFFFFFFF; //return to nowhere
   np->tf->esp =(np->tf->esp) - 4;
-  if (copyout(np->pgdir, np->tf->esp, ustack, 8) < 0) {
+  if (copyout(np->pgdir, np->tf->esp, ustack, size) < 0) {
     cprintf("Stack copy failed.\n");
     return -1;
   }

@@ -29,19 +29,6 @@ void player(void* arg) {
     }
 
     exit();
-
-
-    // lock_acquire(&lock);
-    // if (pass_no <= pass_round) {
-    //     pass_no++;
-    //     printf(1, "# Pass number no: %d ", pass_no);
-    // }
-    // printf(1, "Thread %d is passing the token to thread %d\n", tid % thread_num, (tid+1) % thread_num);
-    // lock_release(&lock);
-    // sleep(1);
-    // // FIXME: when the pass round is larger than thread number
-    // // FIXME: the os will automatically restart after this process is completed
-    // exit();
 }
 
 int main(int argc, char *argv[]) {
@@ -56,7 +43,6 @@ int main(int argc, char *argv[]) {
         pass_round = atoi(argv[2]);
     }
 
-    // create threads
     int i;
     uint arg = 0;
     for (i = 0; i < thread_num; i++) {  // i is tid
@@ -66,6 +52,7 @@ int main(int argc, char *argv[]) {
     }
     sleep(100);
     
+    // FIXME:
     // while(wait() >= 0);
     printf(1, "# Simulation of Frisbee game has finished, 6 rounds were played in total!\n");
     exit();

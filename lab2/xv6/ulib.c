@@ -128,8 +128,9 @@ void *thread_create(void*(start_routine)(void*), void *arg) {
 
   if((uint)stack % PGSIZE)
 		stack = stack + (PGSIZE - (uint)stack % PGSIZE);
-
-  int tid = clone(start_routine, stack, 0, arg);
+  
+  int size = 8;
+  int tid = clone(start_routine, stack, size, arg);
 
   if (tid < 0) {
       printf(1, "# Clone failed\n");
