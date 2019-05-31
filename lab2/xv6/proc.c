@@ -555,7 +555,7 @@ int clone(void*(func)(void*), void *stack, int size, void *arg) {
   *np->tf = *currproc->tf;
   np->pgdir = currproc->pgdir;
 
-  np->tf->eip = (uint)func; // change eip to new function
+  np->tf->eip = (uint)func; // set instruction pointer
   np->tf->eax = 0;          // clear %eax so that fork returns 0 in the child.
 
   // step 2: use the same file descriptor
@@ -597,7 +597,7 @@ int clone(void*(func)(void*), void *stack, int size, void *arg) {
   // }
 
   // np->tf->esp = sp;
-  // np->tf->ebp = curproc->tf->esp;
+  np->tf->ebp = currproc->tf->esp;  // set base pointer
 
   pid = np->pid;
   release(&ptable.lock);

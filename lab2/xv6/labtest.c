@@ -12,7 +12,6 @@ void player(void* arg) {
     int tid = *(int*)arg;
 
     int pass_num = (tid <= pass_round % thread_num) ? (pass_round / thread_num + 1) : (pass_round / thread_num);
-    // printf(1, "pass_num = %d\n", pass_num);
 
     int i;
     for (i = 0; i < pass_num; i++) {
@@ -50,10 +49,9 @@ int main(int argc, char *argv[]) {
         thread_create((void*)player, (void*)&arg);
         sleep(10);
     }
-    sleep(100);
+    sleep(40);
     
     // FIXME:
-    // while(wait() >= 0);
-    printf(1, "# Simulation of Frisbee game has finished, 6 rounds were played in total!\n");
+    printf(1, "# Simulation of Frisbee game has finished, %d rounds were played in total!\n", pass_round);
     exit();
 }

@@ -17,7 +17,7 @@ np->pgdir = currproc->pgdir;
 ```
 
 #### File Descriptor
-The thread should use the same file descriptor as parent.
+The thread should use the same file descriptor as parent. This is copied as in ```fork()```.
 ```
 for (i = 0; i < NOFILE; i++)
     if (currproc->ofile[i])
@@ -27,7 +27,8 @@ safestrcpy(np->name, currproc->name, sizeof(currproc->name));
 ```
 
 #### User Stack
-I created an array ```ustack[]``` to store the passed arguments. Then I used kernel function copyout() to copy ustack to the virtual address (esp) in page table pgdir.
+I created an array ```ustack[]``` to store the passed arguments. Then I used kernel function copyout() to copy ustack to the virtual address in page table pgdir. Register ```$esp``` stores the address of the top of the stack, pointing to ```0xFFFFFFFF```. Then the following addresses should point to the input arguments. This is based on ```exec.c```.
+After decide the address of the top of the stack, register ```$eip``` is set to point to the next instruction the system is about to execute, and the base pointer register ```$ebp``` is set to be the same as ```$esp```.
 ```
 uint ustack[2];
 ustack[0] = 0xffffffff;  // fake return PC
@@ -42,12 +43,16 @@ if (copyout(np->pgdir, np->tf->esp, ustack, size) < 0) {
         cprintf("Stack copy failed.\n");
         return -1;
 }
+
+np->tf->eip = (uint)func; // set instruction pointer
+np->tf->eax = 0;          // clear %eax so that fork returns 0 in the child.
+np->tf->ebp = currproc->tf->esp;  // set base pointer
 ```
 
 ### Thread Library
 The library is located in ```ulib.c```.
 #### thread_create() function
-I first malloc 2 pages for stack. If the virtual address of start of the stack is not page-aligned, I round it up. Then ```clone()``` system call is called. In this case, only one argument of type "unsigned int" is passed to the function, so the size is assigned to be 8.
+I first malloc 2 pages for stack. If the virtual address of start of the stack is not page-aligned, I round it up. Then ```clone()``` system call is called. In this case, only one argument of type "unsigned int" is passed to the function, so the size is assigned to be 8. The new thread starts executing at the address specified by ```start_routine()```.
 ```
 void *thread_create(void*(start_routine)(void*), void *arg) {
   void *stack = malloc(2 * PGSIZE);
@@ -143,9 +148,7 @@ int main(int argc, char *argv[]) {
         sleep(10);
     }
     sleep(100);
-    
-    // FIXME:
-    // while(wait() >= 0);
+
     printf(1, "# Simulation of Frisbee game has finished, 6 rounds were played in total!\n");
     exit();
 }
