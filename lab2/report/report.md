@@ -94,6 +94,13 @@ void lock_release(lock_t *lock) {
 ## Test
 In the test program, the user-defined number of threads are created to run the same function. The variables pass round ```pass_round``` and pass number ```pass_no``` are kept globally in the program. They modify the values of the global variables in critical region, which is guaranteed by the spinlock implemented in uer library.
 
+### Usage
+```
+make qemu
+labtest [thread number] [pass round]
+```
+If no input argument is given, the default number of thread is 4 and pass round is 6.
+
 ### Test Program
 ```
 #include "user.h"
